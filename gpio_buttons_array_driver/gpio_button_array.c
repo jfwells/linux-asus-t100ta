@@ -18,31 +18,30 @@
  *
  */
 
+#define DEBUG 1
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/init.h>
 #include <linux/types.h>
-#include <linux/gpio.h>
 
 #include <linux/acpi.h>
 #include <acpi/acpi_bus.h>
 #include <acpi/acpi_drivers.h>
 
+#include <linux/gpio.h>
+#include <linux/gpio/driver.h>
 #include <linux/gpio/consumer.h>
 #include <linux/gpio_keys.h>
 #include <linux/input.h>
 
+#include "gpiolib.h"
 
-#define PREFIX "ACPI: "
-#define ACPI_GPIO_BUTTON_ARRAY_CLASS "buttonarray"
-#define GPIO_BUTTON_ARRAY_MAX_BUTTONS 5
+#define GPIO_BUTTON_ARRAY_MAX 5
 
 
-static int gpio_button_array_add(struct acpi_device *device);
-static int gpio_button_array_remove(struct acpi_device *device);
-
-ACPI_MODULE_NAME("gpio_button_array");
+static int gpio_button_array_probe(struct platform_device *device);
+static int gpio_button_array_remove(struct platform_device *device);
 
 
 static const struct acpi_device_id btnarray_device_ids[] = {
@@ -51,17 +50,17 @@ static const struct acpi_device_id btnarray_device_ids[] = {
 	{  }
 };
 
+
 MODULE_DEVICE_TABLE(acpi, btnarray_device_ids);
 
-
-static struct acpi_driver gpio_button_array_driver = {
-	.name		= "GPIO Tablet Button Array",
-	.ids		= btnarray_device_ids,
-	.ops		= {
-				.add =		gpio_button_array_add,
-				.remove = 	gpio_button_array_remove,
-			},
-	.owner	= THIS_MODULE
+static struct platform_driver gpio_button_array_driver = {
+	.probe	= gpio_button_array_probe,
+	.remove = gpio_button_array_remove,
+	.driver = {
+		.name = "GPIO Tablet Button Array",
+		.acpi_match_table = ACPI_PTR(btnarray_device_ids),
+		// .pm = 
+	},
 };
 
 
@@ -83,34 +82,36 @@ static struct platform_device buttons_platform_device = {
  * The first two should be able to wake the device.
  * Once found, bind them to a gpio-keys platform device.
 */
-static int gpio_button_array_add(struct acpi_device *device)
+//static int gpio_button_array_add(struct acpi_device *device)
+static int gpio_button_array_probe(struct platform_device *device)
 {
 	int nbuttons = 0;
 	int error = 0;
 	static struct gpio_desc *desc;
 	struct gpio_keys_button *button;
 
+
 	char *labels[GPIO_BUTTON_ARRAY_MAX] = {"Power_Button", "Home_Button", "Volume_Up", "Volume_Down", "Screen_Lock"};
 	int keycodes[GPIO_BUTTON_ARRAY_MAX] = {KEY_POWER, KEY_LEFTMETA, KEY_VOLUMEUP, KEY_VOLUMEDOWN, KEY_SCREENLOCK};
 
 	pdata = kzalloc(sizeof(*pdata) + nbuttons * (sizeof *button), GFP_KERNEL);
 
-	printk("Looking for GPIO buttons\n");
+	dev_info(&device->dev, "Looking for GPIO buttons\n");
 
 
 	if (!pdata) {
 		error = -ENOMEM;
 		goto err_out;
 	}
-
-	for (nbuttons = 0; nbuttons < GPIO_BUTTON_ARRAY_MAX; nbuttons++) {
-		desc = devm_gpiod_get_index(&device->dev, NULL, nbuttons); 
+	for (nbuttons = 0; nbuttons < 5; nbuttons++) {
+		desc = devm_gpiod_get_index(&device->dev, NULL, nbuttons);
+		dev_info(&device->dev, "Scanning GPIO %d\n", nbuttons);
 		if (IS_ERR(desc)) {
-			break;
+			dev_err(&device->dev, "Error: %d\n", (int)PTR_ERR(desc));
+			continue;
 		}
 
 		button = &pdata->buttons[nbuttons];
-
 		button->desc = labels[nbuttons]; 
 		button->gpio = desc_to_gpio(desc);
 		button->active_low = 0;
@@ -119,39 +120,37 @@ static int gpio_button_array_add(struct acpi_device *device)
 		button->wakeup = (nbuttons < 2) ? 1 : 0;
 
 	}
-	
 
 	if (nbuttons == 0) {
 		dev_err(&device->dev, "Failed to get any gpio descriptors for GPIO\n");
 		error = -ENODEV;
 		goto err_free_pdata;
 	} 
-	
+
+	/* TODO: make platform device & pdata local, store in array so we can handle multiple
+	   driver instances */
 	pdata->nbuttons = nbuttons;
 	pdata->rep = 1;
-	
-	buttons_platform_device.dev.platform_data = pdata;
-	
-	
-	printk("Adding button array!\n");
-	platform_device_register(&buttons_platform_device);
-	printk("Finished adding button array!\n"); 	
 
+	buttons_platform_device.dev.platform_data = pdata;
+
+	dev_info(&device->dev, "Adding button array!\n");
+	platform_device_register(&buttons_platform_device);
 
 	return 0;
 
 err_free_pdata:
 	kfree(pdata);
-	
+
 err_out:
 	return error;
-	
+
 }
 
-
-static int gpio_button_array_remove(struct acpi_device *device)
+//static int gpio_button_array_remove(struct acpi_device *device)
+static int gpio_button_array_remove(struct platform_device *device)
 {
-
+	/* TODO: UNREGISTER gpio-keys PLATFORM DEVICES HERE */
 	platform_device_unregister(&buttons_platform_device);
 
 	return 0;
@@ -159,22 +158,14 @@ static int gpio_button_array_remove(struct acpi_device *device)
 
 static int __init gpio_button_array_init(void)
 {
-	int result = 0;
-
-	result = acpi_bus_register_driver(&gpio_button_array_driver);
-	if (result < 0) {
-			ACPI_DEBUG_PRINT((ACPI_DB_ERROR,
-							  "Error registering driver\n"));
-			return -ENODEV;
-	}
+	platform_driver_register(&gpio_button_array_driver);
+	printk("Driver registered: gpio_button_array\n");
 	return 0;
 }
 
-
-
 static void __exit gpio_button_array_exit(void)
 {
-	acpi_bus_unregister_driver(&gpio_button_array_driver);
+	platform_driver_unregister(&gpio_button_array_driver);
 }
 
 module_init(gpio_button_array_init);
