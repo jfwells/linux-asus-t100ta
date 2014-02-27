@@ -8,10 +8,10 @@ drivers/acpi/acpi_platform.c
 
 Todo
 ==== 
-- gpiod_get_index() not working -- failing because acpi_get_gpiod() isn't returning a descriptor
--- Then test if gpio-keys is right approach (may not be necessary)
---- Don't use single global to store gpio-keys platform device, allow for multiple
---- Unload gpio-keys platform device on unload
+- gpiod_get_index() is not working -- failing because acpi_get_gpiod() isn't returning a descriptor
+ - Then test if gpio-keys is right approach (may not be necessary)
+  - on't use single global to store gpio-keys platform device, allow for multiple
+  - Unload gpio-keys platform device on unload
 
 Notes
 =====
