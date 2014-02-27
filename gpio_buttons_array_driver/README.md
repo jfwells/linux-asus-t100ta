@@ -24,4 +24,5 @@ Testing
 ======
 
 make
+
 sudo insmod gpio_button_array.ko
