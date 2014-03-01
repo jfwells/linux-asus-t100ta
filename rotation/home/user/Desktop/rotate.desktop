@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Rotate
+Comment=Rotate the screen
+Keywords=rotate;screen;
+Exec=/lib/udev/asus-t100ta-rotate.sh
+Terminal=true
+Type=Application
+Icon=rotation-allowed-symbolic
+StartupNotify=true 
+Categories=System;

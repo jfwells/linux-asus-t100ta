@@ -1,0 +1,15 @@
+Section "Device"
+    Identifier "Configured Video Device"
+EndSection
+
+Section "Monitor"
+    Identifier "Configured Monitor"
+    ModeLine "1368x768_60.00" 85.25 1368 1440 1576 1784 768 771 781 798 -hsync +vsync
+    Option "PreferredMode" "1368x768_60.00"
+EndSection
+
+Section "Screen"
+    Identifier "Configured Screen"
+    Monitor "Configured Monitor"
+    Device "Configured Video Device"
+EndSection
