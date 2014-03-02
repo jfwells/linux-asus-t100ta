@@ -13,17 +13,17 @@ Testing / Installing:
 
 ### Building the module ###
 1. Download all the files in this folder (or 'git clone' this repository)
-2. cd <download_location>/cm3218_ambient_light_sensor_driver
-3. make
+2. $ cd <download_location>/cm3218_ambient_light_sensor_driver
+3. $ make
 
 ### Installing the module: ###
-4. sudo make install
+4. $ sudo make install
 
 ### Loading the module: ###
-5. sudo modprobe cm3218
+5. $ sudo modprobe cm3218
 
 ### Testing the module: ###
-6. watch cat /sys/bus/iio/devices/iio\:device0/in_illuminance0_input
+6. $ watch cat /sys/bus/iio/devices/iio\:device0/in_illuminance0_input
 7. Move your tablet around under different light sources and watch the numbers change
 
 
