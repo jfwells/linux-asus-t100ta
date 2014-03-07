@@ -1,0 +1,10 @@
+--- a/drivers/acpi/acpi_platform.c
++++ b/drivers/acpi/acpi_platform.c
+@@ -32,6 +32,7 @@ static const struct acpi_device_id acpi_platform_device_ids[] = {
+ 	{ "ACPI0003" },
+ 	{ "VPC2004" },
+ 	{ "BCM4752" },
++	{ "LNV4752" },
+ 
+ 	/* Intel Smart Sound Technology */
+ 	{ "INT33C8" },

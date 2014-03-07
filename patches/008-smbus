@@ -1,0 +1,68 @@
+From: Chew, Kean ho <kean.ho.chew@xxxxxxxxx>
+
+Add Device ID of Intel BayTrail SMBus Controller.
+
+Signed-off-by: Chew, Kean ho <kean.ho.chew@xxxxxxxxx>
+Signed-off-by: Chew, Chiau Ee <chiau.ee.chew@xxxxxxxxx>
+---
+ Documentation/i2c/busses/i2c-i801 |    1 +
+ drivers/i2c/busses/Kconfig        |    1 +
+ drivers/i2c/busses/i2c-i801.c     |    3 +++
+ 3 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/Documentation/i2c/busses/i2c-i801 b/Documentation/i2c/busses/i2c-i801
+index aaaf0693..adf5e33 100644
+--- a/Documentation/i2c/busses/i2c-i801
++++ b/Documentation/i2c/busses/i2c-i801
+@@ -26,6 +26,7 @@ Supported adapters:
+   * Intel Wellsburg (PCH)
+   * Intel Coleto Creek (PCH)
+   * Intel Wildcat Point-LP (PCH)
++  * Intel BayTrail (SOC)
+    Datasheets: Publicly available at the Intel website
+ 
+ On Intel Patsburg and later chipsets, both the normal host SMBus controller
+diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
+index f5ed031..f23da0e 100644
+--- a/drivers/i2c/busses/Kconfig
++++ b/drivers/i2c/busses/Kconfig
+@@ -110,6 +110,7 @@ config I2C_I801
+ 	    Wellsburg (PCH)
+ 	    Coleto Creek (PCH)
+ 	    Wildcat Point-LP (PCH)
++	    BayTrail (SOC)
+ 
+ 	  This driver can also be built as a module.  If so, the module
+ 	  will be called i2c-i801.
+diff --git a/drivers/i2c/busses/i2c-i801.c b/drivers/i2c/busses/i2c-i801.c
+index 349c2d3..899f559 100644
+--- a/drivers/i2c/busses/i2c-i801.c
++++ b/drivers/i2c/busses/i2c-i801.c
+@@ -60,6 +60,7 @@
+   Wellsburg (PCH) MS    0x8d7f     32     hard     yes     yes     yes
+   Coleto Creek (PCH)    0x23b0     32     hard     yes     yes     yes
+   Wildcat Point-LP (PCH)   0x9ca2     32     hard     yes     yes     yes
++  BayTrail (SOC)        0x0f12     32     hard     yes     yes     yes
+ 
+   Features supported by this driver:
+   Software PEC                     no
+@@ -161,6 +162,7 @@
+ 				 STATUS_ERROR_FLAGS)
+ 
+ /* Older devices have their ID defined in <linux/pci_ids.h> */
++#define PCI_DEVICE_ID_INTEL_BAYTRAIL_SMBUS	0x0f12
+ #define PCI_DEVICE_ID_INTEL_COUGARPOINT_SMBUS	0x1c22
+ #define PCI_DEVICE_ID_INTEL_PATSBURG_SMBUS	0x1d22
+ /* Patsburg also has three 'Integrated Device Function' SMBus controllers */
+@@ -822,6 +824,7 @@ static DEFINE_PCI_DEVICE_TABLE(i801_ids) = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_WELLSBURG_SMBUS_MS2) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_COLETOCREEK_SMBUS) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_WILDCATPOINT_LP_SMBUS) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_BAYTRAIL_SMBUS) },
+ 	{ 0, }
+ };
+ 
+-- 
+1.7.4.4
+
+--

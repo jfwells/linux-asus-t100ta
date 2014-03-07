@@ -1,0 +1,12 @@
+diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
+index c0a3941..c0839cb 100644
+--- a/drivers/acpi/acpi_platform.c
++++ b/drivers/acpi/acpi_platform.c
+@@ -36,6 +36,7 @@ static const struct acpi_device_id acpi_platform_device_ids[] = {
+ 	{ "BCM2E1A" },
+ 	{ "BCM2E39" },
+ 	{ "BCM2E3D" },
++	{ "PNP0C40" },
+ 
+ 	/* Intel Smart Sound Technology */
+ 	{ "INT33C8" },

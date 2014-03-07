@@ -1,0 +1,17 @@
+diff -urN linux-3.14-rc1.orig/arch/x86/kernel/reboot.c linux-3.14-rc1.new/arch/x86/kernel/reboot.c
+--- linux-3.14-rc1.orig/arch/x86/kernel/reboot.c	2014-02-07 12:46:03.000000000 +0100
++++ linux-3.14-rc1.new/arch/x86/kernel/reboot.c	2014-02-07 14:09:14.000000000 +0100
+@@ -633,6 +633,13 @@
+ 			machine_shutdown();
+ 		pm_power_off();
+ 	}
++
++#ifdef CONFIG_EFI
++	if (efi_enabled(EFI_RUNTIME_SERVICES))
++		efi.reset_system(EFI_RESET_SHUTDOWN,
++				 EFI_SUCCESS, 0, NULL);
++#endif
++
+ 	/* A fallback in case there is no PM info available */
+ 	tboot_shutdown(TB_SHUTDOWN_HALT);
+ }
