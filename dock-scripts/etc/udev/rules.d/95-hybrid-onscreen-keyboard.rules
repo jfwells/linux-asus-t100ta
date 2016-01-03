@@ -1,2 +1,0 @@
-ACTION=="add", SUBSYSTEMS=="usb", ATTRS{manufacturer}=="ASUSTek COMPUTER INC.", ATTRS{idProduct}=="17e0", RUN+="USER=`/usr/bin/who | /bin/grep :0 | /usr/bin/head -1  | /usr/bin/cut -f 1 -d ' '`; /bin/su $USER -c /lib/udev/base-station-added.sh"
-ACTION=="remove", SUBSYSTEMS=="usb", ATTRS{manufacturer}=="ASUSTek COMPUTER INC.", ATTRS{idProduct}=="17e0", RUN+="USER=`/usr/bin/who | /bin/grep :0 | /usr/bin/head -1  | /usr/bin/cut -f 1 -d ' '`; /bin/su $USER -c /lib/udev/base-station-removed.sh"
