@@ -11,13 +11,13 @@ do
 	if [ -d /dev/input/by-id ]; then
 		if [ $BSTATE = "UNDOCKED" ]; then
 			BSTATE="DOCKED"
-			/home/jfwells/scripts/docked.sh
+			docked.sh
 		fi
 
 	else
 		if [ $BSTATE = "DOCKED" ]; then
 			BSTATE="UNDOCKED"
-			/home/jfwells/scripts/undocked.sh
+			undocked.sh
 		fi
 	fi
 
