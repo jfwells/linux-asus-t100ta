@@ -1,0 +1,194 @@
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index eccd4d9..66126c3 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -19,6 +19,7 @@
+ #include <asm/smp.h>
+ #include <asm/pci_x86.h>
+ #include <asm/setup.h>
++#include <linux/module.h>
+ 
+ unsigned int pci_probe = PCI_PROBE_BIOS | PCI_PROBE_CONF1 | PCI_PROBE_CONF2 |
+ 				PCI_PROBE_MMCONF;
+@@ -81,6 +82,8 @@ struct pci_ops pci_root_ops = {
+  */
+ DEFINE_RAW_SPINLOCK(pci_config_lock);
+ 
++EXPORT_SYMBOL(pci_config_lock);
++
+ static int __init can_skip_ioresource_align(const struct dmi_system_id *d)
+ {
+ 	pci_probe |= PCI_CAN_SKIP_ISA_ALIGN;
+diff --git a/arch/x86/platform/atom/Makefile b/arch/x86/platform/atom/Makefile
+index 40983f5..49c1928 100644
+--- a/arch/x86/platform/atom/Makefile
++++ b/arch/x86/platform/atom/Makefile
+@@ -1,2 +1,9 @@
+ obj-$(CONFIG_PMC_ATOM)		+= pmc_atom.o
+ obj-$(CONFIG_PUNIT_ATOM_DEBUG)	+= punit_atom_debug.o
++
++# BOARD files
+++obj-y	+= platform_mt9m114.o
+++obj-y 	+= platform_ov5640_2.o
+++obj-y 	+= platform_ov5640_1.o
+++obj-y	+= platform_camera.o
+++obj-y	+= byt_plat_clock.o
+diff --git a/drivers/media/Kconfig b/drivers/media/Kconfig
+index 3ef3d6c..b5be371 100644
+--- a/drivers/media/Kconfig
++++ b/drivers/media/Kconfig
+@@ -20,10 +20,14 @@ comment "Multimedia core support"
+ #
+ config MEDIA_CAMERA_SUPPORT
+ 	bool "Cameras/video grabbers support"
++	select X86_MRFLD
+ 	---help---
+ 	  Enable support for webcams and video grabbers.
+ 
+ 	  Say Y when you have a webcam or a video capture grabber board.
++	  
++config X86_MRFLD
++	tristate
+ 
+ config MEDIA_ANALOG_TV_SUPPORT
+ 	bool "Analog TV support"
+@@ -213,6 +217,7 @@ config MEDIA_ATTACH
+ 	depends on MODULES
+ 	default MODULES
+ 
++source "drivers/media/atomisp2/Kconfig"
+ source "drivers/media/i2c/Kconfig"
+ source "drivers/media/tuners/Kconfig"
+ source "drivers/media/dvb-frontends/Kconfig"
+diff --git a/drivers/media/Makefile b/drivers/media/Makefile
+index e608bbc..350c970 100644
+--- a/drivers/media/Makefile
++++ b/drivers/media/Makefile
+@@ -21,6 +21,9 @@ endif
+ obj-$(CONFIG_VIDEO_DEV) += v4l2-core/
+ obj-$(CONFIG_DVB_CORE)  += dvb-core/
+ 
++# Atomisp driver
++obj-$(CONFIG_VIDEO_ATOMISP) += atomisp2/
++
+ # There are both core and drivers at RC subtree - merge before drivers
+ obj-y += rc/
+ 
+diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+index 521bbf1..ad4088b 100644
+--- a/drivers/media/i2c/Kconfig
++++ b/drivers/media/i2c/Kconfig
+@@ -626,6 +626,20 @@ config VIDEO_S5C73M3
+ 	---help---
+ 	  This is a V4L2 sensor-level driver for Samsung S5C73M3
+ 	  8 Mpixel camera.
++	  
++config VIDEO_MT9M114
++	tristate "Aptina MT9M114 sensor support"
++	depends on VIDEO_ATOMISP
++	default m
++	---help---
++	  Aptina MT9M114 sensor for ATOMISP
++
++config VIDEO_OV5640
++	tristate "Omnivision OV5640 sensor support"
++	depends on VIDEO_ATOMISP
++	default m
++	---help---
++	  Omnivision OV5640 sensor for ATOMISP
+ 
+ comment "Flash devices"
+ 
+diff --git a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
+index 07db257..0c2f79e 100644
+--- a/drivers/media/i2c/Makefile
++++ b/drivers/media/i2c/Makefile
+@@ -79,3 +79,6 @@ obj-$(CONFIG_VIDEO_IR_I2C)  += ir-kbd-i2c.o
+ obj-$(CONFIG_VIDEO_ML86V7667)	+= ml86v7667.o
+ obj-$(CONFIG_VIDEO_OV2659)	+= ov2659.o
+ obj-$(CONFIG_VIDEO_TC358743)	+= tc358743.o
++obj-$(CONFIG_VIDEO_OV5640) += ov5640_2.o
++obj-$(CONFIG_VIDEO_OV5640) += ov5640_1.o
++obj-$(CONFIG_VIDEO_MT9M114) += mt9m114.o
+diff --git a/drivers/media/v4l2-core/videobuf2-dma-contig.c b/drivers/media/v4l2-core/videobuf2-dma-contig.c
+index c331272..58e626c 100644
+--- a/drivers/media/v4l2-core/videobuf2-dma-contig.c
++++ b/drivers/media/v4l2-core/videobuf2-dma-contig.c
+@@ -25,7 +25,7 @@ struct vb2_dc_conf {
+ 	struct device		*dev;
+ };
+ 
+-struct vb2_dc_buf {
++/* struct vb2_dc_buf {
+ 	struct device			*dev;
+ 	void				*vaddr;
+ 	unsigned long			size;
+@@ -34,14 +34,14 @@ struct vb2_dc_buf {
+ 	struct sg_table			*dma_sgt;
+ 	struct frame_vector		*vec;
+ 
+-	/* MMAP related */
++	 MMAP related 
+ 	struct vb2_vmarea_handler	handler;
+ 	atomic_t			refcount;
+ 	struct sg_table			*sgt_base;
+ 
+-	/* DMABUF related */
++	 DMABUF related 
+ 	struct dma_buf_attachment	*db_attach;
+-};
++};*/
+ 
+ /*********************************************/
+ /*        scatterlist table functions        */
+@@ -55,8 +55,9 @@ static unsigned long vb2_dc_get_contiguous_size(struct sg_table *sgt)
+ 	unsigned long size = 0;
+ 
+ 	for_each_sg(sgt->sgl, s, sgt->nents, i) {
+-		if (sg_dma_address(s) != expected)
+-			break;
++		//TODO SARAT super big hack to get large resolutions to work. Actual fix is to switch to dma-sg backend for vb2.
++		//if (sg_dma_address(s) != expected)
++		//	break;
+ 		expected = sg_dma_address(s) + sg_dma_len(s);
+ 		size += sg_dma_len(s);
+ 	}
+@@ -67,6 +68,7 @@ static unsigned long vb2_dc_get_contiguous_size(struct sg_table *sgt)
+ /*         callbacks for all buffers         */
+ /*********************************************/
+ 
++
+ static void *vb2_dc_cookie(void *buf_priv)
+ {
+ 	struct vb2_dc_buf *buf = buf_priv;
+diff --git a/include/media/videobuf2-dma-contig.h b/include/media/videobuf2-dma-contig.h
+index c33dfa6..5276f62 100644
+--- a/include/media/videobuf2-dma-contig.h
++++ b/include/media/videobuf2-dma-contig.h
+@@ -15,6 +15,26 @@
+ 
+ #include <media/videobuf2-v4l2.h>
+ #include <linux/dma-mapping.h>
++struct vb2_dc_buf {
++	struct device			*dev;
++	void				*vaddr;
++	unsigned long			size;
++	dma_addr_t			dma_addr;
++	enum dma_data_direction		dma_dir;
++	struct sg_table			*dma_sgt;
++
++  	/* MMAP related */
++ 	struct vb2_vmarea_handler	handler;
++ 	atomic_t			refcount;
++	struct sg_table			*sgt_base;
++
++  	/* USERPTR related */
++ 	struct vm_area_struct		*vma;
++
++  	/* DMABUF related */
++	struct dma_buf_attachment	*db_attach;
++};
++
+ 
+ static inline dma_addr_t
+ vb2_dma_contig_plane_dma_addr(struct vb2_buffer *vb, unsigned int plane_no)
